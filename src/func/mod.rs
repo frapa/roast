@@ -21,7 +21,7 @@ use num;
 //     return Tensor::new(result_shape, result_data);
 // }
 
-pub fn elemwise2<T>(a: Tensor<T>, b: Tensor<T>, func: fn(&T, &T) -> T) -> Tensor<T>
+pub fn elemwise2<T>(a: &Tensor<T>, b: &Tensor<T>, func: fn(&T, &T) -> T) -> Tensor<T>
 where
     T: num::Num + Copy,
 {
