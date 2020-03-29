@@ -1,29 +1,32 @@
 use super::*;
 
-use std::ops::*;
+use std::rc::Rc;
 
 use num;
+use uuid;
 
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Tensor<T>
 where
-    T: num::Num + Copy,
+    T: num::Num + Copy + 'static,
 {
-    pub data: Box<[T]>,
+    pub id: u128,
+    pub data: Rc<[T]>,
     pub shape: Shape,
-    pub track_gradient: bool,
+    pub track_grad: bool,
 }
 
 impl<T> Tensor<T>
 where
-    T: num::Num + Copy,
+    T: num::Num + Copy + 'static,
 {
     pub fn new(shape: impl Into<Shape>, data: Vec<T>) -> Self {
         Self {
-            data: data.into_boxed_slice(),
+            id: uuid::Uuid::new_v4().as_u128(),
+            data: Rc::from(data),
             shape: shape.into(),
-            track_gradient: false,
+            track_grad: false,
         }
     }
 
@@ -46,13 +49,30 @@ where
     pub fn ones(shape: impl Into<Shape>) -> Self {
         Self::full(shape, num::One::one())
     }
+
+    pub fn scalar(val: T) -> Self {
+        Self::full([], val)
+    }
+
+    pub fn track_grad(&mut self) {
+        self.track_grad = true;
+    }
 }
 
 impl<T> From<T> for Tensor<T>
     where
-        T: num::Num + Copy,
+        T: num::Num + Copy + 'static,
 {
     fn from(scalar: T) -> Self {
         Tensor::new([], vec![scalar])
+    }
+}
+
+impl<T> PartialEq for Tensor<T>
+    where
+        T: num::Num + Copy + 'static,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.data == other.data && self.shape == other.shape
     }
 }
